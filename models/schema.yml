@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Cleaned customer master data."
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: email
+        tests: [not_null]
+
+  - name: stg_products
+    description: "Product catalog with margin calculations."
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: stg_orders
+    description: "Order header with completion flag."
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+
+  - name: stg_order_items
+    description: "Line items for orders with computed line totals."
+    columns:
+      - name: order_item_id
+        tests: [unique, not_null]
+
+  - name: stg_payments
+    description: "Payment records with captured flag."
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+
+  - name: stg_shipments
+    description: "Shipment tracking with transit time."
+    columns:
+      - name: shipment_id
+        tests: [unique, not_null]
+
+  - name: stg_product_reviews
+    description: "Customer reviews with positive/negative classification."
+    columns:
+      - name: review_id
+        tests: [unique, not_null]
+      - name: rating
+        tests:
+          - not_null
+
+  - name: stg_promotions
+    description: "Active promotion codes."
+    columns:
+      - name: promotion_id
+        tests: [unique, not_null]
+
+  - name: stg_suppliers
+    description: "Supplier master data."
+    columns:
+      - name: supplier_id
+        tests: [unique, not_null]
+
+  - name: int_orders_enriched
+    description: "Orders with computed totals, payments, and applied promotions."
+
+  - name: int_customer_lifetime
+    description: "Per-customer lifetime aggregates (orders, LTV, reviews)."
+
+  - name: int_product_performance
+    description: "Per-product sales and review performance."
+
+  - name: dim_customers
+    description: "Customer dimension with lifetime value and segment."
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
+  - name: dim_products
+    description: "Product dimension with sales tier classification."
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: fct_orders
+    description: "Order fact table with customer, shipment, and promotion context."
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+
+  - name: fct_daily_revenue
+    description: "Daily revenue rollup."
+    columns:
+      - name: revenue_date
+        tests: [unique, not_null]

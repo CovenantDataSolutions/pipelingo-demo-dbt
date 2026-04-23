@@ -1,0 +1,21 @@
+customer_id,first_name,last_name,email,signup_date,region,is_active
+1,Ava,Mitchell,ava.mitchell@example.com,2024-01-14,North America,true
+2,Liam,Chen,liam.chen@example.com,2024-01-22,North America,true
+3,Sophia,Okafor,sophia.okafor@example.com,2024-02-03,EMEA,true
+4,Noah,Patel,noah.patel@example.com,2024-02-18,APAC,true
+5,Isabella,Rossi,isabella.rossi@example.com,2024-03-01,EMEA,true
+6,Ethan,Walker,ethan.walker@example.com,2024-03-09,North America,false
+7,Mia,Nguyen,mia.nguyen@example.com,2024-03-21,APAC,true
+8,Lucas,Silva,lucas.silva@example.com,2024-04-02,LATAM,true
+9,Charlotte,Kim,charlotte.kim@example.com,2024-04-15,APAC,true
+10,Mason,Brown,mason.brown@example.com,2024-04-28,North America,true
+11,Amelia,Johansson,amelia.johansson@example.com,2024-05-11,EMEA,true
+12,Oliver,Garcia,oliver.garcia@example.com,2024-05-24,LATAM,true
+13,Harper,Dubois,harper.dubois@example.com,2024-06-06,EMEA,false
+14,Elijah,Tanaka,elijah.tanaka@example.com,2024-06-19,APAC,true
+15,Evelyn,Anderson,evelyn.anderson@example.com,2024-07-02,North America,true
+16,James,Reyes,james.reyes@example.com,2024-07-15,LATAM,true
+17,Abigail,Muller,abigail.muller@example.com,2024-08-01,EMEA,true
+18,Benjamin,Park,benjamin.park@example.com,2024-08-17,APAC,true
+19,Emily,Carter,emily.carter@example.com,2024-09-04,North America,true
+20,William,Hassan,william.hassan@example.com,2024-09-20,EMEA,true

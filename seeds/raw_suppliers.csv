@@ -1,0 +1,11 @@
+supplier_id,supplier_name,country,contact_email,is_preferred
+201,SoundWave Audio,US,orders@soundwaveaudio.com,true
+202,KeyCraft,DE,sales@keycraft.de,true
+203,VisionTech,TW,contact@visiontech.tw,false
+204,Ergonova,SE,b2b@ergonova.se,true
+205,BrightSpaces,US,wholesale@brightspaces.com,false
+206,CoreFlow,CA,orders@coreflow.ca,true
+207,BrewHouse,IT,sales@brewhouse.it,true
+208,BladeCraft,JP,orders@bladecraft.jp,true
+209,IronForge,US,wholesale@ironforge.com,true
+210,Wanderlite,NL,sales@wanderlite.nl,false

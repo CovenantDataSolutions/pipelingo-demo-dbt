@@ -1,0 +1,13 @@
+pipelingo_demo:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: kjc87988.us-east-1
+      user: MALIKJAMALL21
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: ACCOUNTADMIN
+      database: PIPELINGO_DEMO
+      warehouse: COMPUTE_WH
+      schema: analytics
+      threads: 4

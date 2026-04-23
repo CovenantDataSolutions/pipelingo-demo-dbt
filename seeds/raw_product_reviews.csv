@@ -1,0 +1,19 @@
+review_id,product_id,customer_id,rating,review_text,review_date
+6001,101,1,5,Amazing sound quality and noise cancellation.,2024-02-10
+6002,101,8,4,Comfortable for long calls but pricey.,2024-04-18
+6003,102,4,5,Best keyboard I've ever used. Love the feel.,2024-03-15
+6004,103,4,4,Great clarity for video calls.,2024-03-15
+6005,104,2,5,Sturdy and the motor is whisper-quiet.,2024-02-20
+6006,105,2,5,Worth every penny for WFH.,2024-02-20
+6007,107,5,4,Good grip and thickness. Wish it was longer.,2024-03-22
+6008,110,3,3,Grinds unevenly on fine settings.,2024-03-01
+6009,110,9,5,Perfect morning brew every time.,2024-04-28
+6010,111,3,4,Classic design, easy to clean.,2024-03-02
+6011,112,7,5,Razor sharp out of the box.,2024-04-10
+6012,113,7,5,Seasoning was perfect. Heats evenly.,2024-04-10
+6013,101,15,5,Cabin noise disappears completely.,2024-07-05
+6014,104,10,5,Motor is smooth. Assembly took 45 min.,2024-05-10
+6015,114,16,4,Holds a laptop + 3 days of clothes.,2024-07-10
+6016,107,18,5,Great for hot yoga sessions.,2024-08-10
+6017,110,19,4,Nice grind consistency for pour-over.,2024-08-20
+6018,112,14,5,Best kitchen purchase this year.,2024-06-15
