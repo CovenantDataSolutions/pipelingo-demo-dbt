@@ -1,0 +1,58 @@
+name: Pipelingo Sync
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # daily at 08:00 UTC
+
+jobs:
+  build-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dbt
+        run: pip install dbt-core dbt-snowflake
+
+      - name: Configure dbt profile
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<EOF
+          pipelingo_demo:
+            target: prod
+            outputs:
+              prod:
+                type: snowflake
+                account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+                user: ${{ secrets.SNOWFLAKE_USER }}
+                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                role: ${{ secrets.SNOWFLAKE_ROLE }}
+                database: ${{ secrets.SNOWFLAKE_DATABASE }}
+                warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+                schema: analytics
+                threads: 4
+          EOF
+
+      - name: dbt build
+        run: |
+          dbt deps || true
+          dbt seed
+          dbt run
+          dbt test
+        continue-on-error: true  # still upload artifacts even if tests fail
+
+      - name: Upload artifacts to Pipelingo
+        if: always()
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${{ secrets.PIPELINGO_TOKEN }}" \
+            -F "manifest=@target/manifest.json" \
+            -F "run_results=@target/run_results.json" \
+            https://pipelingo-production-97a9.up.railway.app/api/dbt/ingest

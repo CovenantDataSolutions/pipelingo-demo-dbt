@@ -77,10 +77,34 @@ This generates `target/manifest.json` and `target/run_results.json`.
 
 ## Upload to Pipelingo
 
+### Option A — Manual upload (one-off)
+
 1. Pipelingo Settings → Connect dbt → **Upload artifacts** tab
 2. Select `target/manifest.json` and `target/run_results.json`
 3. Upload
-4. Dashboard shows model runs, Lineage page shows the DAG
+
+### Option B — Automated via GitHub Actions (recommended)
+
+Zero manual uploads. Every push + daily schedule runs dbt and posts results to Pipelingo.
+
+1. **Generate a CI token** in Pipelingo: Settings → CI Automation → "Generate CI token" → copy the `pip_...` value.
+
+2. **Add GitHub Secrets** to this repo (Settings → Secrets and variables → Actions):
+   - `PIPELINGO_TOKEN` — the token from step 1
+   - `SNOWFLAKE_ACCOUNT` — e.g. `kjc87988.us-east-1`
+   - `SNOWFLAKE_USER`
+   - `SNOWFLAKE_PASSWORD`
+   - `SNOWFLAKE_ROLE` — e.g. `ACCOUNTADMIN`
+   - `SNOWFLAKE_DATABASE` — `PIPELINGO_DEMO`
+   - `SNOWFLAKE_WAREHOUSE` — `COMPUTE_WH`
+
+3. **The workflow** at `.github/workflows/pipelingo-sync.yml` will now:
+   - Run on every push to `main`
+   - Run daily at 08:00 UTC (cron)
+   - Run manually via "Run workflow" button
+   - Execute `dbt seed / run / test`, then POST artifacts to Pipelingo
+
+That's it — your dashboard + lineage stay in sync automatically.
 
 ## Demoing a failure
 
