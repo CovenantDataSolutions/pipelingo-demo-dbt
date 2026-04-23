@@ -4,3 +4,4 @@ logs/
 .user.yml
 *.log
 .DS_Store
+dbt_internal_packages/
