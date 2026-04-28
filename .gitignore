@@ -5,3 +5,8 @@ logs/
 *.log
 .DS_Store
 dbt_internal_packages/
+
+# Private keys never get committed.
+setup/keys/
+*.p8
+*.pem

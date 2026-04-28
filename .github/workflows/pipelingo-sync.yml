@@ -21,10 +21,18 @@ jobs:
       - name: Install dbt
         run: pip install dbt-core dbt-snowflake
 
-      - name: Configure dbt profile
+      - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.dbt
-          cat > ~/.dbt/profiles.yml <<EOF
+          # GitHub multiline secrets preserve newlines.
+          printf '%s' "$SNOWFLAKE_PRIVATE_KEY" > ~/.dbt/rsa_key.p8
+          chmod 600 ~/.dbt/rsa_key.p8
+
+      - name: Configure dbt profile
+        run: |
+          cat > ~/.dbt/profiles.yml <<'EOF'
           pipelingo_demo:
             target: prod
             outputs:
@@ -32,11 +40,11 @@ jobs:
                 type: snowflake
                 account: ${{ secrets.SNOWFLAKE_ACCOUNT }}
                 user: ${{ secrets.SNOWFLAKE_USER }}
-                password: ${{ secrets.SNOWFLAKE_PASSWORD }}
+                private_key_path: /home/runner/.dbt/rsa_key.p8
                 role: ${{ secrets.SNOWFLAKE_ROLE }}
                 database: ${{ secrets.SNOWFLAKE_DATABASE }}
                 warehouse: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
-                schema: analytics
+                schema: marts
                 threads: 4
           EOF
 

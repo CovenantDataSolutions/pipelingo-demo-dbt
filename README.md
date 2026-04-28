@@ -1,10 +1,12 @@
 # Pipelingo Demo dbt Project
 
-Realistic e-commerce dbt project for Pipelingo demos. 9 source tables, 16 models total.
+Realistic e-commerce dbt project that runs end-to-end against Snowflake's free
+tier and ships its `manifest.json` + `run_results.json` to a Pipelingo workspace
+on every push.
 
-## Data Model
+## Data model
 
-**9 source tables** (seeds):
+**9 source tables** (CSV seeds, ~213 rows total):
 - `raw_customers` — 20 global customers
 - `raw_products` — 15 products across 5 categories
 - `raw_suppliers` — 10 suppliers across 6 countries
@@ -15,104 +17,117 @@ Realistic e-commerce dbt project for Pipelingo demos. 9 source tables, 16 models
 - `raw_product_reviews` — 18 customer reviews
 - `raw_promotions` — 5 promotion codes
 
-**16 models:**
+**16 models, layered:**
 ```
-Staging (9 views):     stg_customers, stg_products, stg_suppliers, stg_orders,
-                       stg_order_items, stg_payments, stg_shipments,
-                       stg_product_reviews, stg_promotions
+Staging (9 views):    stg_customers, stg_products, stg_suppliers, stg_orders,
+                      stg_order_items, stg_payments, stg_shipments,
+                      stg_product_reviews, stg_promotions
 
-Intermediate (3):      int_orders_enriched       (orders + items + payments + promotions)
-                       int_customer_lifetime     (customers + orders + reviews)
-                       int_product_performance   (products + suppliers + sales + reviews)
+Intermediate (3):     int_orders_enriched      (orders + items + payments + promotions)
+                      int_customer_lifetime    (customers + orders + reviews)
+                      int_product_performance  (products + suppliers + sales + reviews)
 
-Marts (4):             dim_customers             (with customer_segment)
-                       dim_products              (with sales_tier)
-                       fct_orders                (order fact with shipment + customer)
-                       fct_daily_revenue         (daily rollup)
+Marts (4):            dim_customers            (with customer_segment)
+                      dim_products             (with sales_tier)
+                      fct_orders               (order fact + shipment + customer)
+                      fct_daily_revenue        (daily rollup)
 ```
 
-## Setup
+Tests in `models/schema.yml` cover uniqueness and not-null on every primary key.
 
-### 1. Install dbt Core
+## One-time setup
+
+You need: a Snowflake account (free trial works) and a Pipelingo workspace.
+
+### 1. Generate a Snowflake key-pair
+
+```bash
+bash setup/generate_keypair.sh
+```
+
+This drops two files in `setup/keys/` (gitignored). The script also prints the
+exact strings you'll paste in the next two steps.
+
+### 2. Create the Snowflake objects
+
+Open Snowsight as `ACCOUNTADMIN`, paste the contents of
+[`setup/snowflake_setup.sql`](setup/snowflake_setup.sql), and replace the
+`<PASTE_PUBLIC_KEY_HERE>` placeholder with the public-key string the script
+printed.
+
+It creates (idempotently):
+- `PIPELINGO_DEMO_WH` — XSMALL warehouse with 60s auto-suspend (basically free)
+- `PIPELINGO_DEMO` — database (dbt creates `raw` / `staging` / `intermediate` / `marts` schemas under it)
+- `PIPELINGO_DEMO_ROLE` — least-privileged role
+- `PIPELINGO_DBT_SVC` — `TYPE=SERVICE` user authed by your public key.
+  This **bypasses Snowflake MFA enforcement** since service users can't enroll.
+
+### 3. Run dbt locally (optional, but recommended for first verification)
 
 ```bash
 pip install dbt-core dbt-snowflake
-```
-
-### 2. Create the Snowflake database
-
-```sql
-CREATE DATABASE IF NOT EXISTS PIPELINGO_DEMO;
-```
-
-### 3. Configure profiles.yml
-
-```bash
 mkdir -p ~/.dbt
 cp profiles.yml.example ~/.dbt/profiles.yml
-# Edit ~/.dbt/profiles.yml → fill in Snowflake password (or set SNOWFLAKE_PASSWORD env var)
+cp setup/keys/rsa_key.p8 ~/.dbt/rsa_key.p8
+# Edit ~/.dbt/profiles.yml — fill in your account locator (e.g. kjc87988.us-east-1)
+
+dbt seed       # loads CSVs → PIPELINGO_DEMO.raw schema
+dbt run        # builds 16 models across staging/intermediate/marts
+dbt test       # runs uniqueness + not-null tests
 ```
 
-### 4. Run
+Artifacts land in `target/manifest.json` and `target/run_results.json` — these are what Pipelingo ingests.
 
-```bash
-dbt seed      # load CSVs → raw schema
-dbt run       # build all 16 models
-dbt test      # run data quality tests
-```
+### 4. Wire up CI (auto-runs on push + daily)
 
-This generates `target/manifest.json` and `target/run_results.json`.
+`.github/workflows/pipelingo-sync.yml` is already in place. Add **7 GitHub
+secrets** to this repo (Settings → Secrets and variables → Actions):
 
-## dbt Cloud setup
+| Secret | Value |
+| --- | --- |
+| `SNOWFLAKE_ACCOUNT` | e.g. `kjc87988.us-east-1` |
+| `SNOWFLAKE_USER` | `PIPELINGO_DBT_SVC` |
+| `SNOWFLAKE_PRIVATE_KEY` | the **full** contents of `setup/keys/rsa_key.p8`, including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` lines |
+| `SNOWFLAKE_ROLE` | `PIPELINGO_DEMO_ROLE` |
+| `SNOWFLAKE_DATABASE` | `PIPELINGO_DEMO` |
+| `SNOWFLAKE_WAREHOUSE` | `PIPELINGO_DEMO_WH` |
+| `PIPELINGO_TOKEN` | generate at Pipelingo → Settings → CI Automation |
 
-1. Create a new dbt Cloud project pointed at this repo
-2. Configure the Snowflake connection
-3. Set up a scheduled Job with commands:
-   ```
-   dbt seed
-   dbt run
-   dbt test
-   ```
-4. After the job runs, download `manifest.json` + `run_results.json` from the Run Details → Artifacts tab
+The workflow fires on:
+- every push to `main`
+- daily at `08:00 UTC` (the `cron` line)
+- manual `workflow_dispatch`
 
-## Upload to Pipelingo
+Each run executes `dbt seed → run → test`, then uploads the resulting artifacts
+to Pipelingo. Test failures don't stop the upload (`continue-on-error: true`)
+so you still see the failure on your dashboard with AI analysis.
 
-### Option A — Manual upload (one-off)
+### 5. Verify it works
 
-1. Pipelingo Settings → Connect dbt → **Upload artifacts** tab
-2. Select `target/manifest.json` and `target/run_results.json`
-3. Upload
-
-### Option B — Automated via GitHub Actions (recommended)
-
-Zero manual uploads. Every push + daily schedule runs dbt and posts results to Pipelingo.
-
-1. **Generate a CI token** in Pipelingo: Settings → CI Automation → "Generate CI token" → copy the `pip_...` value.
-
-2. **Add GitHub Secrets** to this repo (Settings → Secrets and variables → Actions):
-   - `PIPELINGO_TOKEN` — the token from step 1
-   - `SNOWFLAKE_ACCOUNT` — e.g. `kjc87988.us-east-1`
-   - `SNOWFLAKE_USER`
-   - `SNOWFLAKE_PASSWORD`
-   - `SNOWFLAKE_ROLE` — e.g. `ACCOUNTADMIN`
-   - `SNOWFLAKE_DATABASE` — `PIPELINGO_DEMO`
-   - `SNOWFLAKE_WAREHOUSE` — `COMPUTE_WH`
-
-3. **The workflow** at `.github/workflows/pipelingo-sync.yml` will now:
-   - Run on every push to `main`
-   - Run daily at 08:00 UTC (cron)
-   - Run manually via "Run workflow" button
-   - Execute `dbt seed / run / test`, then POST artifacts to Pipelingo
-
-That's it — your dashboard + lineage stay in sync automatically.
+After the first push, in your Pipelingo dashboard:
+- 9 source tables show up under `raw`
+- 16 pipeline runs appear (one per model + tests)
+- Lineage page renders the layered DAG
+- Click any test failure → `Run Technical Analysis` → Claude reads the compiled SQL
 
 ## Demoing a failure
 
-Break a model intentionally, e.g. in `models/marts/dim_customers.sql`:
+The simplest way to demo Pipelingo's AI analysis: break a model intentionally.
 
 ```sql
--- Bad column name:
-from lifetime_BROKEN
+-- models/marts/dim_customers.sql
+from {{ ref('int_customer_lifetime_BROKEN') }}
 ```
 
-Run `dbt run --select dim_customers` → it fails. Re-upload `run_results.json` to Pipelingo — Claude AI explains the failure on the dashboard.
+Push the change, wait for the workflow to run (~2 min), and Pipelingo's
+dashboard will show the failure with a one-click `Run Technical Analysis` that
+reads the compiled SQL and explains the bad reference.
+
+Revert the change to clear the failure on the next run.
+
+## Cost
+
+The XSMALL warehouse with 60s auto-suspend uses ~0.05 credits per `dbt build` —
+about 1¢ at standard pricing. A daily schedule for a year stays under $5.
+Snowflake's free trial gives you $400 credit, so this is effectively free
+during your trial.

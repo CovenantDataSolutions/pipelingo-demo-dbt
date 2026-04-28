@@ -1,7 +1,30 @@
+# Copy to ~/.dbt/profiles.yml and fill in your account.
+# Two example outputs are below; pick the one matching how
+# you authenticate.
+#
+# Most users will want `prod` (key-pair). The `dev_password`
+# block is only useful if you have a non-MFA-enrolled human
+# user and want to test quickly without generating a key.
+
 pipelingo_demo:
-  target: dev
+  target: prod
   outputs:
-    dev:
+    # Recommended — survives Snowflake's MFA enforcement.
+    prod:
+      type: snowflake
+      account: kjc87988.us-east-1            # your Snowflake account locator
+      user: PIPELINGO_DBT_SVC                 # the TYPE=SERVICE user from setup/snowflake_setup.sql
+      private_key_path: ~/.dbt/rsa_key.p8     # PKCS8 PEM you generated with setup/generate_keypair.sh
+      # private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE', '') }}"
+      role: PIPELINGO_DEMO_ROLE
+      database: PIPELINGO_DEMO
+      warehouse: PIPELINGO_DEMO_WH
+      schema: marts                           # dbt creates raw/staging/intermediate from dbt_project.yml
+      threads: 4
+
+    # Quick-start for human users who haven't migrated to MFA yet.
+    # Will start failing once Snowflake enforces strong auth on this user.
+    dev_password:
       type: snowflake
       account: kjc87988.us-east-1
       user: MALIKJAMALL21
@@ -9,5 +32,5 @@ pipelingo_demo:
       role: ACCOUNTADMIN
       database: PIPELINGO_DEMO
       warehouse: COMPUTE_WH
-      schema: analytics
+      schema: marts
       threads: 4
