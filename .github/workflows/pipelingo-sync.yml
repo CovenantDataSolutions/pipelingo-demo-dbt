@@ -48,7 +48,11 @@ jobs:
                 threads: 4
           EOF
 
+      - name: dbt debug (connectivity check)
+        run: dbt debug
+
       - name: dbt build
+        id: dbt
         run: |
           dbt deps || true
           dbt seed
@@ -56,11 +60,24 @@ jobs:
           dbt test
         continue-on-error: true  # still upload artifacts even if tests fail
 
+      - name: Show what dbt produced
+        if: always()
+        run: ls -la target/ 2>/dev/null || echo "no target/ directory — dbt failed before producing artifacts"
+
       - name: Upload artifacts to Pipelingo
         if: always()
         run: |
+          if [ ! -f target/manifest.json ]; then
+            echo "::error::target/manifest.json missing — the dbt step above failed. See its log for the real error." >&2
+            exit 1
+          fi
+          ARGS=(-F "manifest=@target/manifest.json")
+          if [ -f target/run_results.json ]; then
+            ARGS+=(-F "run_results=@target/run_results.json")
+          else
+            echo "::warning::target/run_results.json missing — uploading manifest only."
+          fi
           curl -fsS -X POST \
             -H "Authorization: Bearer ${{ secrets.PIPELINGO_TOKEN }}" \
-            -F "manifest=@target/manifest.json" \
-            -F "run_results=@target/run_results.json" \
+            "${ARGS[@]}" \
             https://pipelingo-production-97a9.up.railway.app/api/dbt/ingest
