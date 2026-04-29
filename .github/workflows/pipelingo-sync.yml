@@ -77,6 +77,12 @@ jobs:
           else
             echo "::warning::target/run_results.json missing — uploading manifest only."
           fi
+          # Attach the raw dbt log so Pipelingo's AI sees adapter-level error
+          # text alongside structured run_results. Optional — silently skipped
+          # if the file isn't there.
+          if [ -f logs/dbt.log ]; then
+            ARGS+=(-F "dbt_log=@logs/dbt.log")
+          fi
           curl -fsS -X POST \
             -H "Authorization: Bearer ${{ secrets.PIPELINGO_TOKEN }}" \
             "${ARGS[@]}" \
