@@ -49,7 +49,7 @@ sources:
 
   - name: raw
     description: "Supplemental tables loaded from dbt seeds — payments, shipments, marketing"
-    schema: raw
+    schema: "{{ target.schema }}_raw"
     tables:
       - name: raw_payments
         description: "Payment events from Stripe webhook captures"

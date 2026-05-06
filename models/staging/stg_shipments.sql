@@ -10,11 +10,11 @@ select
     tracking_number,
     status                                   as shipment_status,
     cast(shipped_at as timestamp_ntz)        as shipped_at,
-    cast(nullif(delivered_at, '') as timestamp_ntz) as delivered_at,
+    cast(delivered_at as timestamp_ntz)      as delivered_at,
     case when status = 'delivered' then true else false end  as is_delivered,
     case when status = 'returned' then true else false end   as is_returned,
     case
-        when delivered_at is not null and delivered_at != ''
+        when delivered_at is not null
             then datediff('day', cast(shipped_at as timestamp_ntz), cast(delivered_at as timestamp_ntz))
         else null
     end                                      as delivery_time_days
