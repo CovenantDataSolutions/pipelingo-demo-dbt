@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Cleaned customer master from TPC-H"
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: full_name
+        tests: [not_null]
+
+  - name: stg_orders
+    description: "Cleaned orders with normalized status + priority"
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests: [not_null]
+      - name: order_status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['open', 'fulfilled', 'pending', 'unknown']
+
+  - name: stg_order_items
+    description: "Cleaned order line items with computed line totals"
+    columns:
+      - name: order_item_id
+        tests: [unique, not_null]
+      - name: order_id
+        tests: [not_null]
+
+  - name: stg_products
+    description: "Cleaned product catalog"
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+      - name: product_name
+        tests: [not_null]
+
+  - name: stg_payments
+    description: "Captured/pending/failed payment events"
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+      - name: amount_usd
+        tests: [not_null]
+
+  - name: stg_shipments
+    description: "Shipment tracking with computed delivery times"
+    columns:
+      - name: shipment_id
+        tests: [unique, not_null]
+
+  - name: stg_marketing_campaigns
+    description: "Marketing campaigns with active flag"
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+
+  - name: stg_marketing_clicks
+    description: "Click events with anonymous flag"
+    columns:
+      - name: click_id
+        tests: [unique, not_null]

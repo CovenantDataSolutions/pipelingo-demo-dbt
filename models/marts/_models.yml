@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Customer dimension (lifetime aggregates baked in)"
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+
+  - name: dim_products
+    description: "Product dimension with sales-tier classification"
+    columns:
+      - name: product_id
+        tests: [unique, not_null]
+
+  - name: fct_orders
+    description: "Order-grain fact table — center of star schema"
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+
+  - name: fct_revenue
+    description: "Payment-grain revenue fact"
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+
+  - name: rpt_daily_revenue
+    description: "Daily revenue rollup with day-over-day comparisons"
+    columns:
+      - name: paid_date
+        tests: [unique, not_null]
+
+  - name: rpt_customer_ltv
+    description: "Lifetime value summary by customer segment"
+
+  - name: rpt_marketing_roi
+    description: "ROI per marketing campaign"
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+
+  - name: rpt_funnel
+    description: "Marketing funnel by channel: clicks -> conversions -> revenue"
+
+  - name: rpt_executive_summary
+    description: "Monthly single-row executive summary — board deck data"

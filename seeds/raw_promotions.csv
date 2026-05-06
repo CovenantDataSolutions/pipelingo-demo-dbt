@@ -1,6 +1,0 @@
-promotion_id,promotion_code,description,discount_percent,valid_from,valid_to
-P001,WELCOME10,First order 10% off,10,2024-01-01,2024-12-31
-P002,SUMMER15,Summer sale 15% off,15,2024-06-01,2024-08-31
-P003,FLASH20,Flash sale 20% off,20,2024-05-01,2024-05-07
-P004,HOLIDAY25,Holiday exclusive 25% off,25,2024-11-20,2024-12-31
-P005,VIP30,VIP member 30% off,30,2024-01-01,2024-12-31

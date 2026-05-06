@@ -1,0 +1,82 @@
+version: 2
+
+# Snowflake's free SNOWFLAKE_SAMPLE_DATA database is included in every
+# account. We use it for the four large fact-and-dimension tables (customer,
+# orders, lineitem, part). The smaller supplemental tables (payments,
+# shipments, marketing) come from dbt seeds in the /seeds folder.
+#
+# This gives us 8 raw entities with realistic data shapes:
+#   - 4 from TPC-H (millions of rows, no storage cost to us)
+#   - 4 from seeds (small CSVs we control for testing edge cases)
+
+sources:
+  - name: tpch
+    description: "Snowflake-provided TPC-H benchmark dataset (free, always available)"
+    database: SNOWFLAKE_SAMPLE_DATA
+    schema: TPCH_SF1
+    tables:
+      - name: customer
+        description: "Customer master records — 150K rows"
+        columns:
+          - name: c_custkey
+            tests: [unique, not_null]
+          - name: c_name
+            tests: [not_null]
+
+      - name: orders
+        description: "Order headers — ~1.5M rows spanning 1992-1998"
+        columns:
+          - name: o_orderkey
+            tests: [unique, not_null]
+          - name: o_custkey
+            tests: [not_null]
+          - name: o_orderdate
+            tests: [not_null]
+
+      - name: lineitem
+        description: "Order line items — ~6M rows"
+        columns:
+          - name: l_orderkey
+            tests: [not_null]
+          - name: l_partkey
+            tests: [not_null]
+
+      - name: part
+        description: "Products / parts catalog — 200K rows"
+        columns:
+          - name: p_partkey
+            tests: [unique, not_null]
+
+  - name: raw
+    description: "Supplemental tables loaded from dbt seeds — payments, shipments, marketing"
+    schema: raw
+    tables:
+      - name: raw_payments
+        description: "Payment events from Stripe webhook captures"
+        columns:
+          - name: payment_id
+            tests: [unique, not_null]
+          - name: order_id
+            tests: [not_null]
+
+      - name: raw_shipments
+        description: "Shipment tracking events from carrier integrations"
+        columns:
+          - name: shipment_id
+            tests: [unique, not_null]
+          - name: order_id
+            tests: [not_null]
+
+      - name: raw_marketing_campaigns
+        description: "Marketing campaign metadata (Google Ads, Facebook, email blasts)"
+        columns:
+          - name: campaign_id
+            tests: [unique, not_null]
+
+      - name: raw_marketing_clicks
+        description: "Click events from marketing campaigns, joined to customers"
+        columns:
+          - name: click_id
+            tests: [unique, not_null]
+          - name: campaign_id
+            tests: [not_null]

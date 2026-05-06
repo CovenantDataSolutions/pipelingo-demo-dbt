@@ -1,27 +1,40 @@
 name: 'pipelingo_demo'
-version: '1.0.0'
+version: '2.0.0'
 config-version: 2
 
 profile: 'pipelingo_demo'
 
 model-paths: ["models"]
 seed-paths: ["seeds"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+
 target-path: "target"
 clean-targets:
   - "target"
   - "dbt_packages"
 
+# Layered architecture mirrors how a real warehouse organizes data:
+#   sources (TPC-H + seeds)
+#     -> staging        (light cleanup, type casts, renames)
+#       -> intermediate (multi-table joins, business logic primitives)
+#         -> marts/core    (dimensions + fact tables)
+#           -> marts/reports (final consumer-facing tables)
 models:
   pipelingo_demo:
     staging:
       +materialized: view
       +schema: staging
     intermediate:
-      +materialized: table
-      +schema: intermediate
+      +materialized: ephemeral
     marts:
-      +materialized: table
-      +schema: marts
+      core:
+        +materialized: table
+        +schema: marts
+      reports:
+        +materialized: table
+        +schema: reports
 
 seeds:
   pipelingo_demo:

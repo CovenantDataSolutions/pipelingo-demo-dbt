@@ -1,0 +1,26 @@
+version: 2
+
+seeds:
+  - name: raw_payments
+    description: "Synthesized Stripe-style payment events tied to TPC-H orders"
+    columns:
+      - name: payment_id
+        tests: [unique, not_null]
+
+  - name: raw_shipments
+    description: "Synthesized carrier shipment events tied to TPC-H orders"
+    columns:
+      - name: shipment_id
+        tests: [unique, not_null]
+
+  - name: raw_marketing_campaigns
+    description: "Synthesized marketing campaigns (Google Ads, Facebook, email blasts)"
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+
+  - name: raw_marketing_clicks
+    description: "Synthesized click events; ~70% attributed to a customer"
+    columns:
+      - name: click_id
+        tests: [unique, not_null]
